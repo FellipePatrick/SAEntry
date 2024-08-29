@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/commons :: head}">
+</head>
+
+<body id="page-top">
+
+         <!-- Table Row -->
+         <div class="my-5" th:fragment="table">
+            <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Nome</th>
+                    <th scope="col">CPF</th>
+                    <th scope="col">Ação</th>
+                    <th scope="col">Hora Chegada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">1</th>
+                    <td>Mark</td>
+                    <td>Mark</td>
+                    <td>Otto</td>
+                    <td>@mdo</td>
+                  </tr>
+                </tbody>
+              </table>
+        </div>        
+    <div th:replace="~{fragments/commons :: footerAcess}"></div>
+
+
+</body>
+
+</html>

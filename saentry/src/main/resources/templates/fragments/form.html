@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/commons :: head}">
+</head>
+
+<body id="page-top">
+    <form  th:if="${#strings.isEmpty(usuario)}"  th:fragment="form (disable)"  th:object="${usuario}" method="post" th:action="@{/user}"> 
+        <input type="hidden" th:field="*{id}" />  
+        <div class="mb-3" style="width: 500px;">
+            <label for="inputNome" class="form-label">Nome</label>
+            <input class="form-control"  type="text" id="nome" placeholder="Digite o nome" th:field="*{nome}"/>
+        </div>
+        <div class="mb-3">
+            <label for="exampleInputEmail1" class="form-label">Usuario</label>
+        
+            <!-- Campo desabilitado -->
+            <input th:if="${disable} == 'desabilitado'" type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" disabled>
+        
+            <!-- Campo habilitado -->
+            <input th:unless="${disable} == 'desabilitado'" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Digite o usuario" th:field="*{credenciais}">
+        </div>
+      <!-- Campo Role -->
+        <div class="mb-3" th:if="${disable} != 'desabilitado'">
+            <label for="roleSelect" class="form-label">Role</label>
+            <select class="form-select" id="roleSelect" aria-label="Role select" th:field="*{role}">
+                <option value="Segurança" selected>Segurança</option>
+                <option value="Servidor">Servidor</option>
+                <option value="Admin">Admin</option>
+            </select>
+        </div>
+
+        
+        <div class="mb-3">
+            <label for="exampleInputPassword1" class="form-label">Senha</label>
+            <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Digite a senha" th:field="*{senha}"> 
+        </div>
+        <button type="submit" class="btn btn-primary">Enviar</button>
+    </form>
+
+    <form th:if="${not #strings.isEmpty(usuario)}" th:fragment="form (disable)" th:object="${usuario}" method="post" th:action="@{/user}">
+        <input type="hidden" th:field="*{id}" />
+        <div class="mb-3" style="width: 500px;">
+            <label for="inputNome" class="form-label">Nome</label>
+            <input class="form-control" type="text" id="nome" placeholder="Digite o nome" th:field="*{nome}" />
+        </div>
+        <div class="mb-3">
+            <label for="exampleInputEmail1" class="form-label">Usuario</label>
+    
+            <!-- Campo desabilitado -->
+            <input th:if="${disable} == 'desabilitado'" type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" disabled>
+    
+            <!-- Campo habilitado -->
+            <input th:unless="${disable} == 'desabilitado'" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Digite o usuario" th:field="*{credenciais}" />
+        </div>
+    
+        <!-- Campo Role -->
+        <div class="mb-3" th:if="${disable} != 'desabilitado'">
+            <label for="roleSelect" class="form-label">Role</label>
+            <select class="form-select" id="roleSelect" aria-label="Role select" th:field="*{role}">
+                <option value="Segurança" th:selected="${usuario.role == 'Segurança'}">Segurança</option>
+                <option value="Servidor" th:selected="${usuario.role == 'Servidor'}">Servidor</option>
+                <option value="Admin" th:selected="${usuario.role == 'Admin'}">Admin</option>
+            </select>
+        </div>
+    
+        <div class="mb-3">
+            <label for="exampleInputPassword1" class="form-label">Senha</label>
+            <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Digite a senha" th:field="*{senha}" />
+        </div>
+        <button type="submit" class="btn btn-primary">Enviar</button>
+    </form>    
+    <div th:replace="~{fragments/commons :: footerAcess}"></div>
+
+</body>
+
+</html>

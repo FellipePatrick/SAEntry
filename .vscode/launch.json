@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SaentryApplication<saentry>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.saentry.SaentryApplication",
+            "projectName": "saentry",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

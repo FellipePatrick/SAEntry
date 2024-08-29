@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/commons :: head}">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+       <ul th:replace="~{fragments/commons :: SideBar}"></ul>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+              <nav th:replace="~{fragments/commons :: navBar}"></nav>
+              <!-- Main -->
+                <div class="container-fluid my-5">               
+                   
+                     <!-- Default header -->
+                   <div th:replace="~{fragments/cards :: default}"></div>
+
+                   <!-- Buttons of peoples -->
+                   <div th:replace="~{fragments/commons :: cardBar}"></div>
+                    
+                   <!-- Table -->
+                   <div th:replace="~{fragments/table :: table}"></div>
+                </div>
+            </div>
+            <footer th:replace="~{fragments/commons :: footer}"></footer> 
+        </div>
+    </div>
+    <div th:replace="~{fragments/commons :: footerAcess}"></div>
+</body>
+
+</html>

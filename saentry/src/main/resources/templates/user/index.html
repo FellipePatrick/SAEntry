@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/commons :: head}">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+       <ul th:replace="~{fragments/commons :: SideBar}"></ul>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+              <nav th:replace="~{fragments/commons :: navBar}"></nav>
+              <!-- Main -->
+              
+              <div class="container">
+                <h2>Editar Usuario</h2>
+                <form th:object="${usuario}" th:action="@{/user/atualizar}" method="post">
+                    <!-- Form fields -->
+                    <input type="hidden" th:field="*{id}" />
+                    <div class="form-group">
+                        <label for="nome">Nome</label>
+                        <input type="text" class="form-control" id="nome" th:field="*{nome}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="credenciais">Email</label>
+                        <input type="text" class="form-control" id="credenciais" th:value="${usuario.credenciais}" disabled/>
+                    </div>
+                    <div class="form-group">
+                        <label for="senha">Senha</label>
+                        <input type="password" class="form-control" id="senha" th:field="*{senha}" placeholder="Insira uma nova senha se deseja alterá-la" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </form>
+            
+            </div>
+            <footer th:replace="~{fragments/commons :: footer}"></footer> 
+        </div>
+    </div>
+    <div th:replace="~{fragments/commons :: footerAcess}"></div>
+</body>
+
+</html>

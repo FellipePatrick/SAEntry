@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/commons :: head}">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <ul th:replace="~{fragments/commons :: SideBar}"></ul>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content" class="">
+                <nav th:replace="~{fragments/commons :: navBar}"></nav>
+                <!-- Main -->
+                
+                <div class="container">
+                    <div th:if="${msg}" class="alert alert-success" role="alert">
+                        <span th:text="${msg}"></span>
+                    </div>
+                    <div th:if="${msgV}" class="alert alert-danger" role="alert">
+                        <span th:text="${msgV}"></span>
+                    </div>
+                    <h2 class="my-4">Cadastro de Usuarios</h2>
+                    <form  th:object="${usuario}" method="post" th:action="@{/user}"> 
+                        <input type="hidden" th:field="*{id}" />  
+                        <div class="mb-3">
+                            <label for="inputNome" class="form-label">Nome</label>
+                            <input class="form-control" required type="text" id="nome" placeholder="Digite o nome" th:field="*{nome}"/>
+                        </div>
+                        <div class="mb-3">
+                            <label for="exampleInputEmail1" class="form-label">Email</label>
+                            <!-- Campo habilitado -->
+                            <input type="email" class="form-control" required id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Digite o seu email" th:field="*{credenciais}">
+                        </div>
+                      <!-- Campo Role -->
+                        <div class="mb-3" th:if="${disable} != 'desabilitado'">
+                            <label for="roleSelect" class="form-label">Função</label>
+                            <select class="form-select" id="roleSelect" aria-label="Role select" th:field="*{role}">
+                                <option value="Segurança" selected>Segurança</option>
+                                <option value="Servidor">Servidor</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                        </div>
+                
+                        
+                        <div class="mb-3">
+                            <label for="exampleInputPassword1" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="exampleInputPassword1" required placeholder="Digite a senha" th:field="*{senha}"> 
+                        </div>
+                        <button type="submit" class="btn btn-primary my-3">Cadastrar</button>
+                    </form>
+                
+                    <h2 class="my-4">Tabela de Usuarios</h2>
+                <!-- Table Row -->
+                <div class="container-fluid my-5 d-flex justify-content-center" th:fragment="table">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Nome</th>
+                                <th scope="col">Usuário</th>
+                                <th scope="col">Função</th>
+                                <th scope="col">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user, iterStat : ${usuarios}">
+                                <!-- Use iterStat.count para criar o contador -->
+                                <th scope="row" th:text="${iterStat.count}"></th>
+                                <td th:text="${user.nome}"></td>
+                                <td th:text="${user.credenciais}"></td>
+                                <td th:text="${user.role}"></td>
+                                <td>
+                                    <!-- Contêiner para os botões -->
+                                    <div class="btn-group" role="group" aria-label="Ações">
+                                        <!-- Botão Editar -->
+                                        <a th:href="@{'/users/' + ${user.id}}" class="btn btn-link p-0">
+                                            <i class="zmdi zmdi-edit"></i>
+                                        </a>
+                                        <!-- Botão Excluir -->
+                                        <a th:href="@{'/users/deletar/' + ${user.id}}" class="btn btn-link p-0">
+                                            <i class="ml-2 zmdi zmdi-delete"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    
+                </div>
+            </div>
+                <footer th:replace="~{fragments/commons :: footer}"></footer>
+            </div>
+        </div>
+        <div th:replace="~{fragments/commons :: footerAcess}"></div>
+</body>
+
+</html>
