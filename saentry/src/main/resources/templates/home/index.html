@@ -5,28 +5,59 @@
 </head>
 
 <body id="page-top">
-    <div id="wrapper">
-       <ul th:replace="~{fragments/commons :: SideBar}"></ul>
-        <div id="content-wrapper" class="d-flex flex-column">
-            <div id="content">
-              <nav th:replace="~{fragments/commons :: navBar}"></nav>
-              <!-- Main -->
-                <div class="container-fluid my-5">               
-                   
-                     <!-- Default header -->
-                   <div th:replace="~{fragments/cards :: default}"></div>
+  <div id="wrapper">
+    <ul th:replace="~{fragments/commons :: SideBar}"></ul>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <nav th:replace="~{fragments/commons :: navBar}"></nav>
+        <!-- Main -->
+        <div class="container-fluid my-5">
+          <div th:if="${msg}" class="alert alert-success" role="alert">
+            <span th:text="${msg}"></span>
+          </div>
+          <div th:if="${msgV}" class="alert alert-danger" role="alert">
+            <span th:text="${msgV}"></span>
+          </div>
+          <!-- Default header -->
+          <div th:replace="~{fragments/cards :: default}"></div>
 
-                   <!-- Buttons of peoples -->
-                   <div th:replace="~{fragments/commons :: cardBar}"></div>
-                    
-                   <!-- Table -->
-                   <div th:replace="~{fragments/table :: table}"></div>
-                </div>
-            </div>
-            <footer th:replace="~{fragments/commons :: footer}"></footer> 
+          <!-- Buttons of peoples -->
+          <div th:replace="~{fragments/commons :: cardBar}"></div>
+
+          <!-- Table -->
+          <div class="my-5">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Nome</th>
+                  <th scope="col">CPF</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Hora Marcada</th>
+                  <th scope="col">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="agendado, iterStat : ${agendados}">
+                  <th scope="row" th:text="${iterStat.count}"></th>
+                  <td th:text="${agendado.nome}"></td>
+                  <td th:text="${agendado.cpf}"></td>
+                  <td th:text="${agendado.email}"></td>
+                  <td th:text="${agendado.horaMarcada}"></td>
+                  <td>
+                    <i class="fas fa-volume-up fa-sm text-gray-50"> </i>
+                    <i class="fas fa-check fa-sm text-gray-50"></i>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
+      <footer th:replace="~{fragments/commons :: footer}"></footer>
     </div>
-    <div th:replace="~{fragments/commons :: footerAcess}"></div>
+  </div>
+  <div th:replace="~{fragments/commons :: footerAcess}"></div>
 </body>
 
 </html>

@@ -1,8 +1,12 @@
 package com.saentry.controller;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -12,55 +16,96 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.saentry.domain.Usuario;
+import com.saentry.domain.Agendado;
 import com.saentry.domain.BaseDados;
-import com.saentry.service.BaseDadosService;
-import com.saentry.service.FileStorageService;
+import com.saentry.service.AgendadoService;
 import com.saentry.service.UsuarioService;
 
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestBody;
-
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 public class SistemaController {
 
     private UsuarioService UsuarioService;
-    private FileStorageService fileStorageService;
-    private BaseDadosService baseDadosService;
-    
-    public SistemaController(UsuarioService UsuarioService) {
+    private AgendadoService agendadoService;
+
+    public SistemaController(UsuarioService UsuarioService, AgendadoService agendadoService) {
         this.UsuarioService = UsuarioService;
-        this.fileStorageService = fileStorageService;
-        this.baseDadosService = baseDadosService;
+        this.agendadoService = agendadoService;
 
     }
 
-    // Gerencia das bases de dados
-    @PostMapping("/baseDados")
-    public String doCadastroDados(@ModelAttribute BaseDados BaseDados, RedirectAttributes redirectAttributes) {
-        BaseDados baseDados = this.baseDadosService.saveBaseDados(BaseDados);
-        
-        return "entity";
-    }
-    
+    @PostMapping("/salvarBase")
+    public ModelAndView doCadastroDados(@ModelAttribute BaseDados s, Errors errors,
+            @RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) throws IOException {
 
+        if (errors.hasErrors()) {
+            return new ModelAndView("home/index").addObject("base", s);
+        }
+
+        File tempFile = File.createTempFile("temp", ".pdf");
+        try {
+            file.transferTo(tempFile);
+
+            PDDocument document = PDDocument.load(tempFile);
+            PDFTextStripper pdfStripper = new PDFTextStripper();
+            String text = pdfStripper.getText(document);
+            document.close();
+
+            this.agendadoService.processTextAfterSequence(text);
+
+            redirectAttributes.addFlashAttribute("msg", "Dados salvos com sucesso!");
+            return new ModelAndView("redirect:/");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("msg", "Erro ao processar o arquivo PDF");
+            return new ModelAndView("redirect:/");
+
+        } finally {
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
+    }
 
     @GetMapping("/")
-    public String teste(Model model) {
+    public String index(Model model) {
+        List<Agendado> agendados = this.agendadoService.findAll();
+        model.addAttribute("agendados", agendados);
+        Agendado agendado = new Agendado();
+        agendado.setNome("Guest");
+        model.addAttribute("agendado", agendado);
         return "home/index";
+    }
+
+    @PostMapping("/search")
+    public ModelAndView index(@ModelAttribute Agendado a, @RequestParam("cpf") String cpf, Errors errors,
+            RedirectAttributes redirectAttributes) {
+        List<Agendado> agendados = this.agendadoService.findAll();
+        ModelAndView modelAndView = new ModelAndView("home/index");
+        modelAndView.addObject("agendados", agendados);
+
+        Optional<Agendado> s = this.agendadoService.findByCpf(cpf);
+        if (s.isPresent()) {
+            modelAndView.addObject("agendado", s.get());
+        } else {
+            redirectAttributes.addFlashAttribute("msgV", "Usuário não agendado!");
+            return new ModelAndView("redirect:/");
+        }
+
+        return modelAndView;
     }
 
     @GetMapping("/login")
     public String login(Model model) {
         return "login/index";
     }
-
-    
-
-
-
 
     // Gerencia de Usuario
 
