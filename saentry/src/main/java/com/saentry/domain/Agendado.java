@@ -23,7 +23,7 @@ public class Agendado {
     private String nome;
     private String email;
     private String cpf;
-    private LocalDate data;
+    private LocalDate data = LocalDate.now();;
     private LocalTime horaMarcada; 
     private LocalTime horaChegada = null;
     private String statusFila = "Geral"; 

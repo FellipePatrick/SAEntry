@@ -11,6 +11,6 @@ public interface AgendadoRepository extends JpaRepository<Agendado, Long> {
 
     List<Agendado> findByStatusFila(String statusFila);
 
-    Optional<Agendado> findByCpf(String cpf);
+    List<Optional<Agendado>> findByCpf(String cpf);
 
 }

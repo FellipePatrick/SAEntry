@@ -26,32 +26,47 @@
 
           <!-- Table -->
           <div class="my-5">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Nome</th>
-                  <th scope="col">CPF</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Hora Marcada</th>
-                  <th scope="col">Ação</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="agendado, iterStat : ${agendados}">
-                  <th scope="row" th:text="${iterStat.count}"></th>
-                  <td th:text="${agendado.nome}"></td>
-                  <td th:text="${agendado.cpf}"></td>
-                  <td th:text="${agendado.email}"></td>
-                  <td th:text="${agendado.horaMarcada}"></td>
-                  <td>
-                    <i class="fas fa-volume-up fa-sm text-gray-50"> </i>
-                    <i class="fas fa-check fa-sm text-gray-50"></i>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <div th:if="${agendados.size() > 0}">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">CPF</th>
+                            <th scope="col">Email</th>
+                            <th scope="col" th:if="!${status}">Hora Marcada</th>
+                            <th scope="col" th:if="${status}">Hora Chegada</th>
+                            <th scope="col">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="agendado, iterStat : ${agendados}">
+                            <th scope="row" th:text="${iterStat.count}"></th>
+                            <td th:text="${agendado.nome}"></td>
+                            <td th:text="${agendado.cpf}"></td>
+                            <td th:text="${agendado.email}"></td>
+                            <td th:if="${status}" th:text="${agendado.horaChegada}"></td>
+                            <td th:if="!${status}" th:text="${agendado.horaMarcada}"></td>
+                            <td>
+                                <a th:href="@{/adicionarAtendimento/{id}(id=${agendado.id})}">
+                                    <i class="fas fa-volume-up fa-sm text-gray-50"> </i>
+                                </a>
+                                <a th:href="@{/adicionarAtendida/{id}(id=${agendado.id})}">
+                                    <i class="fas fa-check fa-sm text-gray-50"></i>
+                                </a>
+                                <a th:href="@{/deletarAgendado/{id}(id=${agendado.id})}">
+                                    <i class="fa fa-times fa-sm text-gray-50"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:unless="${agendados.size() > 0}">
+              <p th:text="'Lista pessoas ' + ${status} + ' está vazia'"></p>
+            </div>          
+        </div>
+        
         </div>
       </div>
       <footer th:replace="~{fragments/commons :: footer}"></footer>

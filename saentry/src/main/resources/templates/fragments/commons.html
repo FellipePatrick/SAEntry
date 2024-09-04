@@ -89,6 +89,7 @@
                 corShadow='card border-left-primary shadow h-100 py-2',
                 tipo='Pessoas Geral',
                 icone='fas fa-calendar fa-2x text-gray-300',
+                link='/',
                 corBorda='text-xs font-weight-bold text-primary text-uppercase mb-1'
             )}"></div>
         
@@ -96,6 +97,7 @@
             <div th:replace="~{fragments/cards :: card(
                 corShadow='card border-left-info shadow h-100 py-2',
                 tipo='PESSOAS NA FILA',
+                link='/fila',
                 icone='fas fa-clipboard-list fa-2x text-gray-300',
                 corBorda='text-xs font-weight-bold text-info text-uppercase mb-1'
             )}"></div>
@@ -104,6 +106,7 @@
             <div th:replace="~{fragments/cards :: card(
                 corShadow='card border-left-warning shadow h-100 py-2',
                 tipo='PESSOAS EM ATENDIMENTO',
+                link='/atendimento',
                 icone='fas fa-comments fa-2x text-gray-300',
                 corBorda='text-xs font-weight-bold text-warning text-uppercase mb-1'
             )}"></div>
@@ -112,6 +115,7 @@
             <div th:replace="~{fragments/cards :: card(
                 corShadow='card border-left-success shadow h-100 py-2',
                 tipo='Pessoas Atendidas',
+                link='/atendida',
                 icone='fas fa-check fa-2x text-gray-300',
                 corBorda='text-xs font-weight-bold text-success text-uppercase mb-1'
             )}"></div>

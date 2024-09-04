@@ -60,29 +60,51 @@
         </div>
       </div>
     </form>
-
     <div th:if="${agendado.nome != 'Guest'}">
-      <h1 th:text="${agendado.nome}"></h1>
-    </div>
-  </div>
-
-
-  <div th:fragment="card (tipo, icone, corBorda, corShadow)" class="col-xl-3 col-md-6 mb-4">
-    <div th:class="${corShadow}">
-      <div class="card-body">
-        <div class="row no-gutters align-items-center">
-          <div class="col mr-2">
-            <div th:class="${corBorda}">
-              <span th:text="${tipo}">Tipo</span>
-            </div>
-          </div>
-          <div class="col-auto">
-            <i th:class="${icone}"></i>
-          </div>
+      <form th:object="${agendado}" th:action="@{/adicionarFila}" method="post">
+        <!-- Form fields -->
+        <input type="hidden" th:field="*{id}" />
+        <div class="form-group">
+            <label for="nome">Nome</label>
+            <input type="text" class="form-control" id="nome" th:field="*{nome}"  disabled/>
         </div>
+        <div class="form-group">
+          <label for="horaMarcada">Hora Marcada</label>
+          <input type="time" class="form-control" id="horaMarcada" th:field="*{horaMarcada}"  disabled/>
       </div>
+      <div class="form-group">
+        <label for="date">Data</label>
+        <input type="text" class="form-control" id="date" th:field="*{data}" disabled/>
+      </div>
+      <div class="form-group">
+        <label for="cpf">CPF</label>
+        <input type="text" class="form-control" id="cpf" th:field="*{cpf}" disabled/>
+      </div>
+        <button type="submit" class="btn btn-primary">Adionar na fila</button>
+      </form>
     </div>
   </div>
+
+
+  <div th:fragment="card (tipo, icone, corBorda, corShadow, link)" class="col-xl-3 col-md-6 mb-4">
+    <div th:class="${corShadow}">
+        <a th:href="${link}"> 
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div th:class="${corBorda}">
+                            <span th:text="${tipo}">Tipo</span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i th:class="${icone}"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+  </div>
+
   <div th:replace="~{fragments/commons :: footerAcess}"></div>
 
 

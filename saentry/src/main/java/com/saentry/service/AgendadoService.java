@@ -36,9 +36,18 @@ public class AgendadoService {
         return agendadoRepository.findAll();
     }
 
-  public Optional<Agendado> findByCpf(String cpf) {
+  public List<Optional<Agendado>> findByCpf(String cpf) {
     return agendadoRepository.findByCpf(cpf);
-}
+    }
+
+    public void update(Long id, String statusFila) {
+        Agendado agendado = this.findById(id);
+        if (agendado != null) {
+            agendado.setStatusFila(statusFila);
+            agendado.setHoraChegada(LocalTime.now());
+            this.saveAgendado(agendado);
+        }
+    }
     public List<Agendado> findByStatusFila(String statusFila) {
         return agendadoRepository.findByStatusFila(statusFila);
     }
@@ -68,7 +77,7 @@ public class AgendadoService {
                         String cpf = parts[2];
 
                         agendado = new Agendado();
-                        agendado.setData(dataAgendamento);
+                        //agendado.setData(dataAgendamento);
                         agendado.setHoraMarcada(horaAgendada);
                         agendado.setCpf(cpf);
                         firstLineOfSequence = false;

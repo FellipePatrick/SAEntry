@@ -3,8 +3,10 @@ package com.saentry.controller;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 
+import java.util.Comparator;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Controller;
@@ -14,10 +16,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import java.time.LocalDate;
 import com.saentry.domain.Usuario;
 import com.saentry.domain.Agendado;
-import com.saentry.domain.BaseDados;
 import com.saentry.service.AgendadoService;
 import com.saentry.service.UsuarioService;
 
@@ -37,34 +38,44 @@ public class SistemaController {
     public SistemaController(UsuarioService UsuarioService, AgendadoService agendadoService) {
         this.UsuarioService = UsuarioService;
         this.agendadoService = agendadoService;
+    }
 
+    @GetMapping("/bases")
+    public String base(Model model) {
+        Agendado agendado = new Agendado();
+        model.addAttribute("agendado", agendado);
+        return "base/index";
+    }
+
+    @PostMapping("/bases")
+    public ModelAndView cadastrarBase(@ModelAttribute Agendado agendado, RedirectAttributes redirectAttributes) {
+        try {
+            this.agendadoService.saveAgendado(agendado);
+            redirectAttributes.addFlashAttribute("msg", "Agendado cadastrado");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("msgV", e.getMessage());
+        }
+        return new ModelAndView("redirect:/");
     }
 
     @PostMapping("/salvarBase")
-    public ModelAndView doCadastroDados(@ModelAttribute BaseDados s, Errors errors,
-            @RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) throws IOException {
-
+    public ModelAndView doCadastroDados(@ModelAttribute String s, Errors errors, @RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) throws IOException {
         if (errors.hasErrors()) {
-            return new ModelAndView("home/index").addObject("base", s);
+            return new ModelAndView("home/index");
         }
-
         File tempFile = File.createTempFile("temp", ".pdf");
         try {
             file.transferTo(tempFile);
-
             PDDocument document = PDDocument.load(tempFile);
             PDFTextStripper pdfStripper = new PDFTextStripper();
             String text = pdfStripper.getText(document);
             document.close();
-
             this.agendadoService.processTextAfterSequence(text);
-
             redirectAttributes.addFlashAttribute("msg", "Dados salvos com sucesso!");
             return new ModelAndView("redirect:/");
-
         } catch (IOException e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("msg", "Erro ao processar o arquivo PDF");
+            redirectAttributes.addFlashAttribute("msgV", "Erro ao processar o arquivo PDF");
             return new ModelAndView("redirect:/");
 
         } finally {
@@ -74,26 +85,148 @@ public class SistemaController {
         }
     }
 
-    @GetMapping("/")
-    public String index(Model model) {
-        List<Agendado> agendados = this.agendadoService.findAll();
-        model.addAttribute("agendados", agendados);
+
+    @GetMapping("/painel")
+    public String painel(Model model){
         Agendado agendado = new Agendado();
         agendado.setNome("Guest");
         model.addAttribute("agendado", agendado);
-        return "home/index";
+        return "painel/index";
     }
 
-    @PostMapping("/search")
-    public ModelAndView index(@ModelAttribute Agendado a, @RequestParam("cpf") String cpf, Errors errors,
-            RedirectAttributes redirectAttributes) {
+    @GetMapping("/")
+    public String index(Model model) {
         List<Agendado> agendados = this.agendadoService.findAll();
+        List<Agendado> agendadosHoje = new ArrayList<>();
+        LocalDate dataAtual = LocalDate.now();
+        for (Agendado agendado : agendados) {
+            if (agendado.getData().equals(dataAtual) && agendado.getStatusFila().equals("Geral")) {
+                agendadosHoje.add(agendado);
+            }
+        }
+        agendadosHoje.sort(Comparator.comparing(Agendado::getHoraMarcada));
+
+        model.addAttribute("agendados", agendadosHoje);
+        Agendado agendado = new Agendado();
+        agendado.setNome("Guest");
+        model.addAttribute("status", "geral");
+        
+        model.addAttribute("agendado", agendado);
+        return "home/index";
+    }
+    @GetMapping("/fila")
+    public ModelAndView fila(@ModelAttribute String s, RedirectAttributes redirectAttributes) {
+        List<Agendado> agendados = this.agendadoService.findByStatusFila("Fila");
+    
+        // Ordenar a lista pela horaChegada
+        agendados.sort(Comparator.comparing(Agendado::getHoraChegada));
+    
+        Agendado agendado = new Agendado();
+        agendado.setNome("Guest");
+        ModelAndView modelAndView = new ModelAndView("home/index");
+        modelAndView.addObject("status", "fila");
+        modelAndView.addObject("agendados", agendados);
+        modelAndView.addObject("agendado", agendado);
+        return modelAndView;
+    }
+    @GetMapping("/atendimento")
+    public ModelAndView atendimento(@ModelAttribute String s, RedirectAttributes redirectAttributes){
+        List<Agendado> agendados = this.agendadoService.findByStatusFila("Atendimento");
+        List<Agendado> agendadosHoje = new ArrayList<>();
+        LocalDate dataAtual = LocalDate.now();
+        for (Agendado agendado : agendados) {
+            if (agendado.getData().equals(dataAtual) && agendado.getStatusFila().equals("Atendimento")) {
+                agendadosHoje.add(agendado);
+            }
+        }
+        Agendado agendado = new Agendado();
+        agendado.setNome("Guest");
+        ModelAndView modelAndView = new ModelAndView("home/index");
+        modelAndView.addObject("status", "atendimento");
+        modelAndView.addObject("agendados", agendadosHoje);
+        modelAndView.addObject("agendado", agendado);
+
+        return modelAndView;
+    }
+
+    @GetMapping("/adicionarAtendimento/{id}")
+    public ModelAndView doAdicionarAtendimento(@ModelAttribute String s, RedirectAttributes redirectAttributes, @PathVariable Long id){
+        Agendado agendado = this.agendadoService.findById(id);
+    
+        if(agendado == null){
+            redirectAttributes.addFlashAttribute("msgV", "Agendado não encontrado");
+            return new ModelAndView("redirect:/");
+        }
+        try {
+            this.agendadoService.update(agendado.getId(), "Atendimento");
+            redirectAttributes.addFlashAttribute("msg", "Agendado notificado para atendimento");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("msgV", e.getMessage());
+        }
+        
+        return new ModelAndView("redirect:/atendimento");
+    }
+
+
+    @GetMapping("/deletarAgendado/{id}")
+    public ModelAndView doDeletarAgendado(@ModelAttribute String s, RedirectAttributes redirectAttributes, @PathVariable Long id){
+        Agendado agendado = this.agendadoService.findById(id);
+        if(agendado == null){
+            redirectAttributes.addFlashAttribute("msgV", "Agendado não encontrado");
+            return new ModelAndView("redirect:/");
+        }
+        try {
+            this.agendadoService.deleteAgendado(agendado.getId());
+            redirectAttributes.addFlashAttribute("msg", "Agendado deletado com sucesso");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("msgV", e.getMessage());
+        }
+        return new ModelAndView("redirect:/");
+    }
+
+    @GetMapping("/atendida")
+    public ModelAndView atendida(@ModelAttribute String s, RedirectAttributes redirectAttributes){
+        List<Agendado> agendados = this.agendadoService.findByStatusFila("Atendida");
+        Agendado agendado = new Agendado();
+        agendado.setNome("Guest");
         ModelAndView modelAndView = new ModelAndView("home/index");
         modelAndView.addObject("agendados", agendados);
+        modelAndView.addObject("status", "atendidas");
+        modelAndView.addObject("agendado", agendado);
+        return modelAndView;
+    }
+    
+    
+    @PostMapping("/search")
+    public ModelAndView index(@ModelAttribute String c, @RequestParam("cpf") String cpf, Errors errors, RedirectAttributes redirectAttributes) {
+        List<Agendado> agendados = this.agendadoService.findAll();
+        List<Agendado> agendadosHoje = new ArrayList<>();
+        LocalDate dataAtual = LocalDate.now();
+        for (Agendado agendado : agendados) {
+            if (agendado.getData().equals(dataAtual)) {
+                agendadosHoje.add(agendado);
+            }
+        }
+        ModelAndView modelAndView = new ModelAndView("home/index");
+        modelAndView.addObject("agendados", agendadosHoje);
+        if (cpf.isEmpty()) {
+            redirectAttributes.addFlashAttribute("msgV", "CPF não pode ser vazio");
+            return new ModelAndView("redirect:/");
+        }
 
-        Optional<Agendado> s = this.agendadoService.findByCpf(cpf);
-        if (s.isPresent()) {
-            modelAndView.addObject("agendado", s.get());
+        List<Optional<Agendado>> lista = this.agendadoService.findByCpf(cpf);
+        if (lista.size() > 0) {
+            boolean flag = false;
+            for (Optional<Agendado> s : lista) {
+                if (s.get().getData().equals(dataAtual) && s.get().getStatusFila().equals("Geral")) {
+                    modelAndView.addObject("agendado", s.get());
+                    return modelAndView;
+                }
+            }
+            if (!flag) {
+                redirectAttributes.addFlashAttribute("msgV", "Usuário já foi adicionado a fila!");
+                return new ModelAndView("redirect:/");
+            }
         } else {
             redirectAttributes.addFlashAttribute("msgV", "Usuário não agendado!");
             return new ModelAndView("redirect:/");
@@ -102,12 +235,43 @@ public class SistemaController {
         return modelAndView;
     }
 
+    @PostMapping("/adicionarFila")
+    public ModelAndView doAdicionarFila(@ModelAttribute Agendado agendado, Errors errors, RedirectAttributes redirectAttributes){
+        if (errors.hasErrors()) {
+            return new ModelAndView("home/index");
+        }
+        try {
+            this.agendadoService.update(agendado.getId(), "Fila");
+            redirectAttributes.addFlashAttribute("msg", "Agendado adicionado a fila");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("msgV", e.getMessage());
+        }
+        
+        return new ModelAndView("redirect:/");
+    }
+
+
+
+    @GetMapping("/adicionarAtendida/{id}")
+    public ModelAndView doAdicionarAtendida(@ModelAttribute String s,@PathVariable Long id ,Errors errors, RedirectAttributes redirectAttributes){
+        Agendado agendado = this.agendadoService.findById(id);
+        if(agendado == null){
+            redirectAttributes.addFlashAttribute("msgV", "Agendado não encontrado");
+            return new ModelAndView("redirect:/");
+        }
+        try {
+            this.agendadoService.update(agendado.getId(), "Atendida");
+            redirectAttributes.addFlashAttribute("msg", "Atendimento finalizado");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("msgV", e.getMessage());
+        }
+        return new ModelAndView("redirect:/atendida");
+    }
+
     @GetMapping("/login")
     public String login(Model model) {
         return "login/index";
     }
-
-    // Gerencia de Usuario
 
     @GetMapping("/user")
     public String user(Model model) {

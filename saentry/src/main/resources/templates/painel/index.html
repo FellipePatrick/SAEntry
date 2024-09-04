@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Painel</title>
+    <script>
+        function conectarPainelStream() {
+            const evtSource = new EventSource("/painel/stream");
+
+            evtSource.addEventListener("atualizarPainel", function(event) {
+                window.location.reload();  // Faz o refresh da página
+            });
+
+            evtSource.onerror = function(err) {
+                console.error("Erro na conexão do stream: ", err);
+                evtSource.close();
+            };
+        }
+
+        window.onload = conectarPainelStream;
+    </script>
+</head>
+<body>
+    <div id="painelContainer">
+        <!-- O conteúdo do painel será atualizado aqui -->
+    </div>
+</body>
+</html>
