@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{fragments/commons :: head}">
-</head>
+<head th:replace="~{fragments/commons :: head}"></head>
 
 <body id="page-top">
   <div id="wrapper">
@@ -10,7 +9,6 @@
     <div id="content-wrapper" class="d-flex flex-column">
       <div id="content">
         <nav th:replace="~{fragments/commons :: navBar}"></nav>
-        <!-- Main -->
         <div class="container-fluid my-5">
           <div th:if="${msg}" class="alert alert-success" role="alert">
             <span th:text="${msg}"></span>
@@ -18,57 +16,110 @@
           <div th:if="${msgV}" class="alert alert-danger" role="alert">
             <span th:text="${msgV}"></span>
           </div>
-          <!-- Default header -->
           <div th:replace="~{fragments/cards :: default}"></div>
 
-          <!-- Buttons of peoples -->
           <div th:replace="~{fragments/commons :: cardBar}"></div>
 
-          <!-- Table -->
           <div class="my-5">
             <div th:if="${agendados.size() > 0}">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Nome</th>
-                            <th scope="col">CPF</th>
-                            <th scope="col">Email</th>
-                            <th scope="col" th:if="!${status}">Hora Marcada</th>
-                            <th scope="col" th:if="${status}">Hora Chegada</th>
-                            <th scope="col">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="agendado, iterStat : ${agendados}">
-                            <th scope="row" th:text="${iterStat.count}"></th>
-                            <td th:text="${agendado.nome}"></td>
-                            <td th:text="${agendado.cpf}"></td>
-                            <td th:text="${agendado.email}"></td>
-                            <td th:if="${status}" th:text="${agendado.horaChegada}"></td>
-                            <td th:if="!${status}" th:text="${agendado.horaMarcada}"></td>
-                            <td>
-                                <a th:href="@{/adicionarAtendimento/{id}(id=${agendado.id})}">
-                                    <i class="fas fa-volume-up fa-sm text-gray-50"> </i>
-                                </a>
-                                <a th:href="@{/adicionarAtendida/{id}(id=${agendado.id})}">
-                                    <i class="fas fa-check fa-sm text-gray-50"></i>
-                                </a>
-                                <a th:href="@{/deletarAgendado/{id}(id=${agendado.id})}">
-                                    <i class="fa fa-times fa-sm text-gray-50"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Nome</th>
+                    <th scope="col">CPF</th>
+                    <th scope="col">Email</th>
+                    <th scope="col" th:if="${status} == 'geral'">Hora Marcada</th>
+                    <th scope="col" th:if="${status} != 'geral'">Hora Chegada</th>
+                    <th scope="col">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="agendado, iterStat : ${agendados}">
+                    <th scope="row" th:text="${iterStat.count}"></th>
+                    <td th:text="${agendado.nome}"></td>
+                    <td th:text="${agendado.cpf}"></td>
+                    <td th:text="${agendado.email}"></td>
+                    <td th:if="${status} != 'geral'" th:text="${agendado.horaChegada}"></td>
+                    <td th:if="${status} == 'geral'" th:text="${agendado.horaMarcada}"></td>
+                    <td>
+                      <a th:if="${status} == 'atendimento' or ${status} == 'fila' "
+                        th:href="@{/adicionarAtendimento/{id}(id=${agendado.id})}">
+                        <i th:id="'atualizarPainel-' + ${agendado.id}" class="fas fa-volume-up fa-sm text-gray-50"></i>
+                      </a>
+                      <a th:if="${status} == 'atendimento'" th:href="@{/adicionarAtendida/{id}(id=${agendado.id})}">
+                        <i class="fas fa-check fa-sm text-gray-50"></i>
+                      </a>
+                      <a th:href="@{/deletarAgendado/{id}(id=${agendado.id})}">
+                        <i class="fa fa-times fa-sm text-gray-50"></i>
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
             <div th:unless="${agendados.size() > 0}">
               <p th:text="'Lista pessoas ' + ${status} + ' está vazia'"></p>
-            </div>          
-        </div>
-        
+            </div>
+          </div>
         </div>
       </div>
+
+      <script>
+        document.getElementById('cpf-input').addEventListener('input', function (e) {
+          let value = e.target.value.replace(/\D/g, '');
+          if (value.length > 11) value = value.slice(0, 11);
+          value = value.replace(/(\d{3})(\d)/, '$1.$2');
+          value = value.replace(/(\d{3})(\d)/, '$1.$2');
+          value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+          e.target.value = value;
+        });
+      
+        function getUltimasPessoasChamadas() {
+          let ultimasChamadas = localStorage.getItem("ultimasPessoasChamadas");
+          return ultimasChamadas ? JSON.parse(ultimasChamadas) : [];
+        }
+      
+        function atualizarUltimasChamadas(idAtual) {
+          let ultimasChamadas = getUltimasPessoasChamadas();
+      
+          // Adiciona o ID atual apenas se não estiver presente na lista
+          if (!ultimasChamadas.includes(idAtual)) {
+            ultimasChamadas.unshift(idAtual);
+      
+            if (ultimasChamadas.length > 10) {
+              ultimasChamadas.pop();
+            }
+      
+            localStorage.setItem("ultimasPessoasChamadas", JSON.stringify(ultimasChamadas));
+            localStorage.setItem("idDaVez", idAtual);
+          }
+        }
+      
+        document.querySelectorAll("[id^='atualizarPainel-']").forEach(function (icon) {
+          icon.addEventListener("click", function () {
+            let idAtual = this.id.split('-')[1];
+            atualizarUltimasChamadas(idAtual);
+      
+            let ultimasPessoasChamadas = localStorage.getItem("ultimasPessoasChamadas");
+            if (ultimasPessoasChamadas) {
+              ultimasPessoasChamadas = JSON.parse(ultimasPessoasChamadas);
+              fetch('/painel/saveLocalStorageData', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ultimasPessoasChamadas: ultimasPessoasChamadas })
+              });
+            }
+    
+            let atualizarPainel = localStorage.getItem("atualizarPainel");
+            localStorage.setItem("atualizarPainel", atualizarPainel === "false" ? "true" : "false");
+          });
+        });
+      </script>
+
+
       <footer th:replace="~{fragments/commons :: footer}"></footer>
     </div>
   </div>

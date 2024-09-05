@@ -1,27 +1,49 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
-    <title>Painel</title>
-    <script>
-        function conectarPainelStream() {
-            const evtSource = new EventSource("/painel/stream");
-
-            evtSource.addEventListener("atualizarPainel", function(event) {
-                window.location.reload();  // Faz o refresh da página
-            });
-
-            evtSource.onerror = function(err) {
-                console.error("Erro na conexão do stream: ", err);
-                evtSource.close();
-            };
-        }
-
-        window.onload = conectarPainelStream;
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Chamada</title>
+    <link rel="icon" th:href="@{./../images/logo.png}" type="image/png">
+    <link th:href="@{../../css/painel.css}" rel="stylesheet" type="text/css">
 </head>
+
 <body>
-    <div id="painelContainer">
-        <!-- O conteúdo do painel será atualizado aqui -->
+    <div class="container">
+        <!-- Agendado da Vez -->
+        <div class="agendado-da-vez">
+            <h2>Agendado da Vez</h2>
+            <p th:if="${agendados.size() > 0}" th:text="${agendados[0].nome}">Nome do Agendado</p>
+        </div>
+        <!-- Lista Geral -->
+        <div class="listagem">
+            <h1>Histórico Geral</h1>
+            <table class="table table-striped" th:if="${agendados.size() > 0}">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Nome</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="agendado, iterStat : ${agendados}">
+                        <th scope="row" th:text="${iterStat.count}"></th>
+                        <td th:text="${agendado.nome}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <script>
+        window.addEventListener("storage", function (event) {
+            if (event.key === "atualizarPainel" && event.newValue === "true") {
+                location.reload();
+                localStorage.setItem("atualizarPainel", "false");
+            }
+        });
+    </script>
 </body>
+
 </html>

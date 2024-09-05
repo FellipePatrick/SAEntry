@@ -85,8 +85,10 @@ public class AgendadoService {
                     }
                 } else if (collectingName && agendado != null) {
                     if (line.contains("@")) {
-                        collectingName = false;
-                        agendado.setNome(nameBuilder.toString().trim());
+                        collectingName = false; 
+                        String nome = nameBuilder.toString().trim();
+                        nome = nome.replace("-", "");
+                        agendado.setNome(nome);
                         agendado.setEmail(line.trim().split(" ")[0]);
 
                         agendados.add(agendado);

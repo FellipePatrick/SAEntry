@@ -9,11 +9,13 @@ import java.util.Optional;
 import java.util.Comparator;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDate;
@@ -27,6 +29,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
@@ -59,7 +62,7 @@ public class SistemaController {
     }
 
     @PostMapping("/salvarBase")
-    public ModelAndView doCadastroDados(@ModelAttribute String s, Errors errors, @RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) throws IOException {
+    public ModelAndView doCadastroDados(@ModelAttribute String s, Errors errors,@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) throws IOException {
         if (errors.hasErrors()) {
             return new ModelAndView("home/index");
         }
@@ -85,12 +88,31 @@ public class SistemaController {
         }
     }
 
+    @PostMapping("/painel/saveLocalStorageData")
+    @ResponseBody
+    public void saveLocalStorageData(@RequestBody Map<String, Object> data, HttpSession session) {
+        @SuppressWarnings("unchecked")
+        List<String> ultimasPessoasChamadas = (List<String>) data.get("ultimasPessoasChamadas");
+        session.setAttribute("ultimasPessoasChamadas", ultimasPessoasChamadas);
+    }
 
     @GetMapping("/painel")
-    public String painel(Model model){
-        Agendado agendado = new Agendado();
-        agendado.setNome("Guest");
-        model.addAttribute("agendado", agendado);
+    public String painel(Model model, HttpSession session) {
+        @SuppressWarnings("unchecked")
+        List<String> ultimasPessoasChamadas = (List<String>) session.getAttribute("ultimasPessoasChamadas");
+        if (ultimasPessoasChamadas == null) {
+            ultimasPessoasChamadas = new ArrayList<>();
+        }
+        List<Agendado> agendados = new ArrayList<>();
+        for (String s : ultimasPessoasChamadas) {
+            Long id = Long.parseLong(s);
+            Agendado agendado = this.agendadoService.findById(id);
+            if (agendado != null) {
+                agendados.add(agendado);
+            }
+        }
+        model.addAttribute("agendados", agendados);
+     
         return "painel/index";
     }
 
@@ -110,17 +132,16 @@ public class SistemaController {
         Agendado agendado = new Agendado();
         agendado.setNome("Guest");
         model.addAttribute("status", "geral");
-        
+
         model.addAttribute("agendado", agendado);
         return "home/index";
     }
+
     @GetMapping("/fila")
     public ModelAndView fila(@ModelAttribute String s, RedirectAttributes redirectAttributes) {
         List<Agendado> agendados = this.agendadoService.findByStatusFila("Fila");
-    
-        // Ordenar a lista pela horaChegada
         agendados.sort(Comparator.comparing(Agendado::getHoraChegada));
-    
+
         Agendado agendado = new Agendado();
         agendado.setNome("Guest");
         ModelAndView modelAndView = new ModelAndView("home/index");
@@ -129,8 +150,9 @@ public class SistemaController {
         modelAndView.addObject("agendado", agendado);
         return modelAndView;
     }
+
     @GetMapping("/atendimento")
-    public ModelAndView atendimento(@ModelAttribute String s, RedirectAttributes redirectAttributes){
+    public ModelAndView atendimento(@ModelAttribute String s, RedirectAttributes redirectAttributes) {
         List<Agendado> agendados = this.agendadoService.findByStatusFila("Atendimento");
         List<Agendado> agendadosHoje = new ArrayList<>();
         LocalDate dataAtual = LocalDate.now();
@@ -150,10 +172,11 @@ public class SistemaController {
     }
 
     @GetMapping("/adicionarAtendimento/{id}")
-    public ModelAndView doAdicionarAtendimento(@ModelAttribute String s, RedirectAttributes redirectAttributes, @PathVariable Long id){
+    public ModelAndView doAdicionarAtendimento(@ModelAttribute String s, RedirectAttributes redirectAttributes,
+            @PathVariable Long id) {
         Agendado agendado = this.agendadoService.findById(id);
-    
-        if(agendado == null){
+
+        if (agendado == null) {
             redirectAttributes.addFlashAttribute("msgV", "Agendado não encontrado");
             return new ModelAndView("redirect:/");
         }
@@ -163,15 +186,15 @@ public class SistemaController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("msgV", e.getMessage());
         }
-        
+
         return new ModelAndView("redirect:/atendimento");
     }
 
-
     @GetMapping("/deletarAgendado/{id}")
-    public ModelAndView doDeletarAgendado(@ModelAttribute String s, RedirectAttributes redirectAttributes, @PathVariable Long id){
+    public ModelAndView doDeletarAgendado(@ModelAttribute String s, RedirectAttributes redirectAttributes,
+            @PathVariable Long id) {
         Agendado agendado = this.agendadoService.findById(id);
-        if(agendado == null){
+        if (agendado == null) {
             redirectAttributes.addFlashAttribute("msgV", "Agendado não encontrado");
             return new ModelAndView("redirect:/");
         }
@@ -185,7 +208,7 @@ public class SistemaController {
     }
 
     @GetMapping("/atendida")
-    public ModelAndView atendida(@ModelAttribute String s, RedirectAttributes redirectAttributes){
+    public ModelAndView atendida(@ModelAttribute String s, RedirectAttributes redirectAttributes) {
         List<Agendado> agendados = this.agendadoService.findByStatusFila("Atendida");
         Agendado agendado = new Agendado();
         agendado.setNome("Guest");
@@ -195,19 +218,21 @@ public class SistemaController {
         modelAndView.addObject("agendado", agendado);
         return modelAndView;
     }
-    
-    
+
     @PostMapping("/search")
     public ModelAndView index(@ModelAttribute String c, @RequestParam("cpf") String cpf, Errors errors, RedirectAttributes redirectAttributes) {
+        cpf = cpf.replace(".", "").replace("-", "");
         List<Agendado> agendados = this.agendadoService.findAll();
         List<Agendado> agendadosHoje = new ArrayList<>();
         LocalDate dataAtual = LocalDate.now();
         for (Agendado agendado : agendados) {
-            if (agendado.getData().equals(dataAtual)) {
+            if (agendado.getData().equals(dataAtual) && agendado.getStatusFila().equals("Geral")) {
                 agendadosHoje.add(agendado);
             }
         }
+        
         ModelAndView modelAndView = new ModelAndView("home/index");
+        modelAndView.addObject("status", "geral");
         modelAndView.addObject("agendados", agendadosHoje);
         if (cpf.isEmpty()) {
             redirectAttributes.addFlashAttribute("msgV", "CPF não pode ser vazio");
@@ -236,7 +261,8 @@ public class SistemaController {
     }
 
     @PostMapping("/adicionarFila")
-    public ModelAndView doAdicionarFila(@ModelAttribute Agendado agendado, Errors errors, RedirectAttributes redirectAttributes){
+    public ModelAndView doAdicionarFila(@ModelAttribute Agendado agendado, Errors errors,
+            RedirectAttributes redirectAttributes) {
         if (errors.hasErrors()) {
             return new ModelAndView("home/index");
         }
@@ -246,16 +272,15 @@ public class SistemaController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("msgV", e.getMessage());
         }
-        
+
         return new ModelAndView("redirect:/");
     }
 
-
-
     @GetMapping("/adicionarAtendida/{id}")
-    public ModelAndView doAdicionarAtendida(@ModelAttribute String s,@PathVariable Long id ,Errors errors, RedirectAttributes redirectAttributes){
+    public ModelAndView doAdicionarAtendida(@ModelAttribute String s, @PathVariable Long id, Errors errors,
+            RedirectAttributes redirectAttributes) {
         Agendado agendado = this.agendadoService.findById(id);
-        if(agendado == null){
+        if (agendado == null) {
             redirectAttributes.addFlashAttribute("msgV", "Agendado não encontrado");
             return new ModelAndView("redirect:/");
         }
